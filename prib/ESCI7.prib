@@ -1,0 +1,117 @@
+S" gpib_port" TO_NAME_INTERFACE
+S" 24 0" TO_NUMB_INTERFACE
+
+\ настройки измерителя
+
+REQUIRE  HYPE ~disa\~day\hype3\hype3.f
+REQUIRE socket_port ~disa/socket.F
+REQUIRE  test_port ~disa/test_prib.F
+
+CLASS  ESPI7
+
+CELL DEFS pribor 
+
+: Start || D:  str_prib   D: etalon  D: flag  ||
+	" *ESCI*"  etalon !
+\ S"  NAME_INTERFACE 1+ NAME_INTERFACE C@" IMMEDIATE_EVALUATE NewObj pribor  !
+\ S" NUMB_INTERFACE 1+ NUMB_INTERFACE C@" IMMEDIATE_EVALUATE pribor @ ^ open
+ gpib_port NewObj pribor !
+ 24 0 pribor @ ^  open
+
+ " *IDN?"  S+CRLF  pribor @ ^  write  
+    pribor @ ^ read  str_prib !     
+    
+ \ CR     str_prib @  STR@ TYPE   CR
+ str_prib @ STR@ etalon @ STR@ WildCMP-U 
+ IF
+ 	 ."   ERROR: ESCI not found. FIND:  "  str_prib @  STR@ TYPE    -1 flag ! 
+ ELSE  
+	"  *IDN?"  S+CRLF pribor @ ^ write    pribor @ ^ read  STYPE CR
+	" INST:SEL SAN" S+CRLF pribor @ ^ write  \ в режим анализатора
+	" :CALC:MARK ON;" S+CRLF pribor @ ^ write     \ установить маркеры
+	\ установить полосу пропускания?
+	\ отключить все факторы?\ "  calc:mark1:max" S+CRLF  pribor @ ^ write 300  PAUSE
+
+	str_prib @ STR@ TYPE 0 flag ! 
+ THEN
+\
+ ."   ... ok "
+\ CR 
+ str_prib @ STRFREE 
+ etalon @ STRFREE 
+ flag @ \ DUP . CR
+
+
+;
+
+
+: Stop
+ pribor @ ^    close \ закрыли после использования
+ pribor  @ FreeObj
+;
+
+: SetFreq  
+FDUP  >FNUM " FREQ:cent  " DUP >R  STR+   R> S+CRLF pribor @ ^ write 100 PAUSE     
+   >FNUM  " CALC:MARK1:X " DUP >R  STR+  R> S+CRLF pribor @ ^ write  100 PAUSE     
+\ "  calc:mark1:max" S+CRLF  pribor @ ^ write 300  PAUSE
+;
+
+\ прочитать данные с приемника с текущими настройками
+: GetLevel \ { \ s-adr }  
+|| D: s-adr ||
+300  PAUSE
+BEGIN
+"  calc:mark1:max"  S+CRLF pribor @ ^ write 300  PAUSE
+" calc:mark1:y?"   S+CRLF  pribor @ ^ write 100 PAUSE
+pribor @ ^ read  s-adr !
+s-adr  @ S>FLOAT  
+UNTIL
+1
+\ DEPTH . FDEPTH . 
+;
+
+\ получить значение частоты максимуиа
+: GetFreq  
+|| D: s-adr ||
+ BEGIN
+  "  calc:mark1:max"  S+CRLF pribor @ ^ write 300  PAUSE
+  " calc:mark1:coun ON"   S+CRLF  pribor @ ^ write 100 PAUSE
+  " calc:mark:coun:freq?"   S+CRLF  pribor @ ^ write 100 PAUSE
+  pribor @ ^ read 
+  s-adr !
+  s-adr  @ S>FLOAT  
+ UNTIL
+;
+\ полоса обзора сигналов
+: SetSpan || F: span ||
+span F!    span F@
+>FNUM  " FREQ:SPAN  " DUP >R  STR+  R> S+CRLF pribor @ ^ write  100 PAUSE     
+span F@ 30e F/
+>FNUM  " BAND " DUP >R  STR+  R> S+CRLF pribor @ ^ write  100 PAUSE     
+;
+
+\ измерении глубины модуляции
+: Modulation? || D: s-adr ||
+\ " CALC:MARK:FUNC:MDEP OFF;"  S+CRLF  pribor @ ^ write 1000 PAUSE
+
+" BAND 100" S+CRLF  pribor @ ^ write 300 PAUSE
+" FREQ:SPAN 5 kHz" S+CRLF  pribor @ ^ write 2000 PAUSE
+BEGIN
+	" CALC:MARK:FUNC:MDEP ON;"  S+CRLF  pribor @ ^ write 3000 PAUSE
+	 " CALC:MARK:FUNC:MDEP:RES?"  S+CRLF  pribor @ ^ write 1000 PAUSE
+	pribor @ ^ read  s-adr !
+\ s-adr   @  STR@ TYPE
+	s-adr   @ S>FLOAT  
+UNTIL
+
+;
+\ ИЗМЕРЕНИЕ ЧАСТОТЫ МОДУЛЯЦИИ
+: ModulationFreq? || D: s-adr ||
+  " calc:delt2:x:rel?"   S+CRLF  pribor @ ^ write 100 PAUSE
+pribor @ ^ read S>FLOAT DROP 
+;
+
+: SetData S+CRLF pribor @ ^ write 300  PAUSE ;
+: GetData || D: s-adr || S+CRLF pribor @ ^ write 300  PAUSE  pribor @ ^ read  s-adr ! s-adr  @ S>FLOAT ;
+  
+;CLASS ESPI7

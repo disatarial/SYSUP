@@ -1,0 +1,58 @@
+\ настройки генератора
+
+REQUIRE  HYPE ~disa\~day\hype3\hype3.f
+ REQUIRE gpib_port ~disa/gpib.f
+
+CLASS SMY
+\ CELL DEFS clas_generator
+ CELL DEFS generator
+
+
+: Start 
+ || D:  str_prib   D: etalon  D: flag  ||
+	" *SMY*"  etalon !	
+ gpib_port NewObj generator !
+ 28 0 generator @ ^ open
+
+  " *IDN?"  S+CRLF  generator @ ^  write  
+    generator @ ^ read   str_prib !     
+ str_prib @ STR@ etalon @ STR@ WildCMP-U  
+ IF
+ 	 "  SMY02 not found. FIND:  "  >R str_prib @ R@ S+  R> str_prib !
+	  str_prib @  TO_ERROR_PROG_BUFER 
+	  ." error: " TYPE_ERROR_PROG_BUFER
+	      	 -1 flag ! 
+ ELSE  
+	str_prib @ STYPE 0 flag ! 
+ THEN
+  etalon   @ STRFREE 
+flag @
+;
+
+
+\ установить частоту
+: SetFreq    >FNUM  " RF " DUP >R  STR+  R>  S+CRLF   
+\ DUP STR@ TYPE ."  "
+ generator   @ ^   write  ; 
+\ установить уровень
+: SetLevel    >FNUM  " LEVEL " DUP >R  STR+ R>  S+CRLF 
+\  DUP STR@ TYPE ."  " 
+generator @ ^ write   ; 
+
+
+: AM  ( 1-on, 0- off ) IF " AM: I" ELSE " AM: OF" THEN   S+CRLF  
+\ DUP STR@ TYPE ."  "
+generator @ ^  write  100 PAUSE ;
+
+: Stop
+" LEVEL off" generator @ ^ write 
+ 100 PAUSE
+ generator @ ^    close \ закрыли после использования
+ generator @ FreeObj
+;
+
+
+ : Off "  LEVEL off" S+CRLF  generator @ ^ write ; 
+
+
+;CLASS  SMY

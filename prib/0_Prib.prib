@@ -1,0 +1,24 @@
+\ настройки измерителя
+
+REQUIRE  HYPE ~disa\~day\hype3\hype3.f
+
+ CLASS 0_Prib 
+: Start
+|| D:  str_prib   D: etalon D: flag    ||
+" test pribor 0 data " str_prib !
+" *pribzor*"  etalon !
+
+str_prib @ STR@ etalon @ STR@ WildCMP-U
+IF ."   ERROR pribor not found  " CR -1 flag ! ELSE  str_prib @ STR@ TYPE CR 0 flag ! THEN 
+etalon @  STRFREE  str_prib @ STRFREE 
+CR
+flag @
+;
+
+: Stop ;
+: SetFreq    FDROP ; 
+: SetLevel  FDROP  ; 
+: GetLevel  0 ; 
+: Off ."  off "  ;
+ 
+;CLASS 0_Prib

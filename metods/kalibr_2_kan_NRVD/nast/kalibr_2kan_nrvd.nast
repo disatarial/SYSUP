@@ -1,0 +1,17 @@
+COMMENT( Режим первичной калибровки с 2 каналами NRVD и измерителем поля 
+1 канал - подаваемая мощность
+2- обраткафайл калибровки - внутреннего формата.)
+ " test.kal" work-info file_result_buf	LOAD_TO_BUFER 
+ 500  work-info STEP_TIME            ! 
+ 500  work-info STEP_PAUSE           ! 
+ 1.0000000e06  metod-info FREQ_BEGIN          F! 
+ 1.0000000e08  metod-info FREQ_END            F! 
+ 1.0000000e-01  metod-info FREQ_STEP           F! 
+ -1  metod-info work_step           ! 
+ 1.0000000e-01   metod-info Tochnost           F! 
+ -3.0000000e00   metod-info GenMax             F! 
+ 6.0000000e00   metod-info GenMaxStep	        F! 
+ " C:\Program Files\SP-Forth\sysup1.0\prib\SMY.prib" metod-info file_generator_buf	LOAD_TO_BUFER 
+ " C:\Program Files\SP-Forth\sysup1.0\prib\NRVD.prib" metod-info file_izmeritel_buf	LOAD_TO_BUFER 
+ " C:\Program Files\SP-Forth\sysup1.0\prib\FM7004_kanN1.prib" metod-info file_kalibr_izm_buf	LOAD_TO_BUFER 
+ " C:\Program Files\SP-Forth\sysup1.0\kal\test.kal" metod-info file_kalibrov_buf	LOAD_TO_BUFER 

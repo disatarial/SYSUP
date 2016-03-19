@@ -1,0 +1,14 @@
+COMMENT( полуавтоматическая  установка значений.
+вввести частоту и необходимый уровень
+)
+ " test.kal" work-info file_result_buf	LOAD_TO_BUFER 
+ 9999  work-info STEP_TIME            ! 
+ 500  work-info STEP_PAUSE           ! 
+ 1.0000000e06  metod-info FREQ_BEGIN          F! 
+ 1.0000000e-01   metod-info Tochnost           F! 
+ -3.0000000e00   metod-info GenMax             F! 
+ 6.0000000e00   metod-info GenMaxStep	        F! 
+ 1.0000000e01   metod-info level	        F! 
+ 1   metod-info dbuv_dbm_v_mv      ! 
+ " D:\prog\SP-Forth\sysup1.0\prib\1_Prib.prib" metod-info file_generator_buf	LOAD_TO_BUFER 
+ " D:\prog\SP-Forth\sysup1.0\prib\1_Prib.prib" metod-info file_kalibr_izm_buf	LOAD_TO_BUFER 

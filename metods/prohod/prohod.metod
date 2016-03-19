@@ -1,0 +1,270 @@
+\ данный список зависит от рабочего метода  и определяется в нем (методе)
+COMMENT_METOD( 1111111222222222333333333)
+0
+\ изменяемые "вручную" значения
+  1 FLOATS  -- FREQ_BEGIN  \ начальная частота
+  1 FLOATS  -- FREQ_END   \ конечная частота
+  1 FLOATS  -- FREQ_STEP \ шаг
+  1 FLOATS  -- Tochnost 
+  1 FLOATS  -- GenMax 
+  1 FLOATS  -- GenMaxStep 	\ ограничение на шаг генераторе
+  256	   -- file_kalibrov_buf	\ буфер имени файла калиброкеи
+  256	   -- file_generator_buf	\ буфер имени файла генератора
+  256	   -- file_kalibr_izm_buf	\ буфер имени файла измерителя калибровки
+  256	   -- file_izmeritel_buf	\ буфер имени файла измерителя
+\ внутренние переменные
+  1 FLOATS  -- FREQ       \ текущая частота
+ CELL -- kalibrovka		\  имя файла калиброкеи
+ CELL -- generator		\   объект генератора
+ CELL -- kalibr_izm		\  имя файла измерителя калибровки
+ CELL -- izmeritel		\  имя файла измерителя
+ CELL -- result			\  имя файла результата
+ CELL -- work_step    \ 1- процентный шаг,  0 линейшый шаг, -1  по таблице
+VALUE sysup-metod-info
+ HERE DUP >R sysup-metod-info DUP ALLOT ERASE TO  metod-info
+
+:NONAME  { n } ( n -- num/fnum  flag adr u    | flag )
+\ flag:   0 - нет описания 1 - целое 2-действительное 3- строка 4 -имя файла 
+\ ( если отричательные значения - нередактируемое поле)
+\ CASE
+ 0
+n 0 = IF DROP metod-info FREQ_BEGIN	2	S" Начальная частота "  THEN
+n 1 = IF DROP  metod-info FREQ_END	2	S" Конечная частота "  THEN
+n 2 = IF DROP   metod-info FREQ_STEP	2	S" Шаг по частоте "   THEN
+n 3 = IF DROP   metod-info Tochnost	2	S" Точность установки"   THEN
+n 4 = IF DROP   metod-info GenMax	2	S" Наибольшее значение"  THEN
+n 5 = IF DROP   metod-info GenMaxStep	2	S" Наибольший шаг"  THEN
+n 6 = IF DROP   metod-info file_kalibrov_buf 4	S" Калиброка"  THEN
+n 7 = IF DROP   metod-info file_generator_buf 4	S" Генератор"  THEN
+n 8 = IF DROP   metod-info file_kalibr_izm_buf 4	S" Измеритель калибровки"  THEN
+n 9 = IF DROP   metod-info file_izmeritel_buf 4	S" Измеритель"  THEN
+n 10 = IF DROP   metod-info work_step  1 S" ТИП РАБОТЫ  "  THEN
+\ 0
+\ ENDCASE
+ \ какой-то глюк кейса
+; TO SeeOne
+
+
+:NONAME
+S" ---------------------------------------------" TYPE CR
+."  COMMENT: "				work-info Coment_buffer work-info  Len_Coment_buffer  @ TYPE CR
+."  file_metod_buf: "			work-info  file_metod_buf	TYPE_BUFER CR  \ 1+ work-info  file_metod_buf  C@ TYPE CR 
+."  file_nastr_buf: "			work-info  file_nastr_buf	TYPE_BUFER  CR \ 1+ work-info  file_nastr_buf  C@ TYPE CR  
+ ." file_result_buf: "			work-info  file_result_buf	TYPE_BUFER CR
+."  STEP_TIME: "			work-info	STEP_TIME	@ .  CR
+."  STEP_PAUSE: "			work-info	STEP_PAUSE	@ . CR
+."  FREQ_BEGIN:"			metod-info	FREQ_BEGIN	F@ F. CR
+."  FREQ_END: "				metod-info	FREQ_END	F@ F. CR
+."  FREQ_STEP: "			metod-info	FREQ_STEP	F@ F. CR
+."  file_generator_buf: "		metod-info file_generator_buf	TYPE_BUFER CR
+."  file_izmeritel_buf: "		metod-info file_izmeritel_buf	TYPE_BUFER CR
+."  file_kalibr_izm_buf: "		metod-info file_kalibr_izm_buf	TYPE_BUFER CR
+."  file_kalibrov_buf: "		metod-info file_kalibrov_buf	TYPE_BUFER CR
+."  Tochnost: "				metod-info  Tochnost		F@ F. CR
+."  GenMaxStep: "			metod-info  GenMaxStep		F@ F. CR
+."  GenMax: "				metod-info  GenMax		F@ F. CR
+."  work_step: "			metod-info  work_step		@ . CR
+S" ---------------------------------------------" TYPE CR
+CR
+; TO see 
+
+
+:NONAME  { save_file }
+\ задержки
+	work-info	STEP_TIME	@  save_file DtoFile  "  work-info STEP_TIME            ! "   save_file StoFile  save_file CRtoFile
+	work-info	STEP_PAUSE	@  save_file DtoFile  "  work-info STEP_PAUSE           ! "   save_file StoFile  save_file CRtoFile
+	metod-info	FREQ_BEGIN	F@ save_file FtoFile  "  metod-info FREQ_BEGIN          F! "  save_file StoFile  save_file CRtoFile	
+	metod-info	FREQ_END	F@ save_file FtoFile  "  metod-info FREQ_END            F! "  save_file StoFile  save_file CRtoFile
+	metod-info	FREQ_STEP	F@ save_file FtoFile  "  metod-info FREQ_STEP           F! "  save_file StoFile  save_file CRtoFile
+\  тип шага- линейный, процентный, ?добавить по формуле?????
+	metod-info	work_step	@ save_file DtoFile   "  metod-info work_step           ! "  save_file StoFile  save_file CRtoFile
+	\ диапазон в которое требуется попасть после калибровки
+	metod-info	Tochnost	F@ save_file FtoFile  "   metod-info Tochnost           F! "  save_file StoFile  save_file CRtoFile
+\ ограничение на генераторе
+	metod-info	GenMax		F@ save_file FtoFile  "   metod-info GenMax             F! "  save_file StoFile  save_file CRtoFile
+	metod-info	GenMaxStep	F@ save_file FtoFile  "   metod-info GenMaxStep	        F! "  save_file StoFile  save_file CRtoFile
+\ имена файлов
+	"  {''} " save_file StoFile metod-info	file_generator_buf  1 +	metod-info	file_generator_buf	C@ STR>S save_file StoFile  " {''} metod-info file_generator_buf	LOAD_TO_BUFER " save_file StoFile  save_file CRtoFile
+	"  {''} " save_file StoFile metod-info	file_izmeritel_buf  1 +	metod-info	file_izmeritel_buf	C@ STR>S save_file StoFile  " {''} metod-info file_izmeritel_buf	LOAD_TO_BUFER " save_file StoFile  save_file CRtoFile
+	"  {''} " save_file StoFile metod-info	file_kalibr_izm_buf 1 + metod-info	file_kalibr_izm_buf	C@ STR>S save_file StoFile  " {''} metod-info file_kalibr_izm_buf	LOAD_TO_BUFER " save_file StoFile  save_file CRtoFile
+	"  {''} " save_file StoFile metod-info	file_kalibrov_buf   1 +	metod-info	file_kalibrov_buf	C@ STR>S save_file StoFile  " {''} metod-info file_kalibrov_buf	LOAD_TO_BUFER " save_file StoFile  save_file CRtoFile 
+\	"  {''} " save_file StoFile metod-info	file_metod		ASCIIZ> STR>S save_file StoFile  " {''} metod-info file_metod		LOAD_TO_BUFER " save_file StoFile  save_file CRtoFile
+; TO 	SAVE_NASTR_DATA 
+	
+	
+
+
+:NONAME  
+\ ."  begin " CR	  
+	see
+
+ \ генератор
+	metod-info file_generator_buf DUP 1+ SWAP  C@   INCLUDE-PROBE IF " error ineterface generator " TO_ERROR_PROG_BUFER  -1 THROW THEN
+	NewObj metod-info generator !
+ \ измеритель
+	metod-info  file_izmeritel_buf DUP 1+ SWAP  C@    INCLUDE-PROBE IF " error ineterface izmeritel " TO_ERROR_PROG_BUFER  -1 THROW THEN
+	NewObj metod-info izmeritel !
+ \ измеритель калибровки
+	metod-info  file_kalibr_izm_buf  DUP 1+ SWAP  C@   INCLUDE-PROBE IF " error ineterface kalibrator  " TO_ERROR_PROG_BUFER  -1 THROW THEN
+	NewObj metod-info kalibr_izm !
+ \ запуск устройств	
+	metod-info generator	@ ^ Start IF " generator not found " TO_ERROR_PROG_BUFER  -1 THROW THEN
+	metod-info izmeritel	@ ^ Start IF " izmeritel not found " TO_ERROR_PROG_BUFER  -1 THROW THEN
+	metod-info kalibr_izm	@ ^ Start IF " izmeritel kalibrovki not found " TO_ERROR_PROG_BUFER  -1 THROW THEN
+\ создали объект-основу калибровки
+	tabl_kalibr NewObj metod-info kalibrovka  !
+	metod-info kalibrovka  @ 	metod-info  file_kalibrov_buf  DUP  1+  SWAP C@   ERR-INCLUDE-PROBE 
+		IF "  error_in_file_kalibrovka "  DUP STR@ TYPE TO_ERROR_PROG_BUFER  error_out_file  work-info  ERROR_PROG !
+		ELSE ."  kalibrovka:  " metod-info kalibrovka  @ ^ SeeDatas  THEN CR
+	metod-info   FREQ_BEGIN F@ metod-info   FREQ  F!  
+\ результаты	подготовили файл
+	work-info  file_result_buf 1+ work-info  file_result_buf C@  STR>S  outFileCreate metod-info result !
+ " // " metod-info result @ StoFile TIME&DATE  DROP DROP DROP metod-info result @ DtoFile  metod-info result @ DtoFile  metod-info result @ DtoFile   metod-info result @  CRtoFile  
+\ коментари ф файл вывода
+
+	"  // " metod-info result @ StoFile
+	work-info Coment_buffer  work-info  Len_Coment_buffer @   STR>S metod-info result @ StoFile
+
+	metod-info result @	CRtoFile 
+	" clear; " metod-info result @ StoFile
+	metod-info result @	CRtoFile 
+
+	" x= [{CRLF}" metod-info result @ StoFile
+." begin-ok"
+	; TO BEGIN:
+	
+	
+:NONAME   \ 
+\ ."  NewStep " CR 
+\ ."  v1 " DEPTH . FDEPTH . ."  "
+ metod-info  work_step  @ 
+\  ."  v2 " DEPTH . FDEPTH . ."  " 
+ CASE 
+ -1 OF  metod-info FREQ_STEP  F@ metod-info FREQ  F@ F*  metod-info FREQ  F@ F+   
+ ENDOF
+  1 OF  metod-info FREQ  F@  metod-info kalibrovka @ ^ NextFreq     ENDOF
+   metod-info FREQ_STEP  F@ metod-info FREQ  F@ F+  
+  \ 3e
+ ENDCASE
+\ ."  v3 " DEPTH . FDEPTH . ."  " 
+\	IF 	
+\	metod-info  work_step  @ -1 = 
+\		IF
+\		metod-info FREQ  F@  metod-info kalibrovka @ ^ NextFreq   \ ."  F: "  F. ."  - "  
+\		ELSE
+\		metod-info FREQ_STEP  F@ metod-info FREQ  F@ F* F@ metod-info FREQ  F@ F+  
+\		THEN
+\	ELSE 	metod-info FREQ_STEP  F@ metod-info FREQ  F@ F+ 
+\	THEN
+\ FDUP F. 
+	metod-info FREQ  F!  
+\ ."  v4 " DEPTH . FDEPTH . ."  " 
+; TO NewStep
+
+
+:NONAME     || F: gen F: kal  D: n_step   ||
+\  ."  work "
+\	 metod-info FREQ  F@   F.
+	 \ учтанавливаем частоту
+	 metod-info FREQ  F@   metod-info generator	@ ^ SetFreq  
+	 metod-info FREQ  F@   metod-info izmeritel	@ ^ SetFreq 
+	 metod-info FREQ  F@   metod-info kalibr_izm	@ ^ SetFreq 
+
+	metod-info FREQ  F@ 1 metod-info kalibrovka @ ^ TakeData  Data_nach_formula Data_Kalib F!   \ что требуется выставить в результате
+	metod-info FREQ  F@ 2 metod-info kalibrovka @ ^ TakeData  gen F!  \ начальные данные генератора
+
+0 n_step !
+ BEGIN 
+\ work-info -upravl_thead- 0 = 
+work_Execute work-info -upravl_thead- @ =
+IF 
+	n_step @ 1 + n_step  !
+	 \ устанавливаем уровни
+		gen F@  metod-info generator @ ^ SetLevel  \  выставляем данные генератора
+	 500 PAUSE-PROG 
+\ FDEPTH .
+	 \ измеряем уровни калибровочного сигнала
+	 metod-info kalibr_izm @ ^ GetLevel  
+	 \ уровеь есть
+\	 . F.
+	1 = \ должно быть только 1 значение
+	IF
+	\ набор данных для формулы
+						Data_nach_formula Sign_Izmer F! 
+		gen  F@				Data_nach_formula Sig_Gener  F!
+		metod-info GenMaxStep F@	Data_nach_formula setsGenMaxStep F!
+		metod-info GenMax	F@	Data_nach_formula setsGenMax F!
+	\ Вычисление требуемой мощности
+		Data_nach_formula Vyhod_Na_Amplitudu
+		Data_nach_formula ResultGen F@  \ FDUP CR F. CR
+		gen  F!
+\ ограничение генератора
+\		gen F@ metod-info GenMax F@ F> IF metod-info GenMax F@  gen  F! THEN
+		gen  F@ metod-info generator  @ ^ SetLevel      
+		500 PAUSE-PROG	 	
+		metod-info kalibr_izm  @ ^  GetLevel \    прочитать уровень с учетом калибровочных данных, кои забиты в измеритель   
+		IF
+			kal F!
+		THEN
+\ FDEPTH .
+	ELSE
+		-100 n_step !  \ не требуется установка по мощности  
+	THEN
+\ FDEPTH .
+ 300 PAUSE-PROG
+  ELSE -100 n_step !  THEN
+ kal  F@  metod-info  FREQ  F@ 1 metod-info kalibrovka @ ^ TakeData   F- FABS  metod-info Tochnost F@ F<	 \ в пределах погрешности
+n_step @  ABS 10 >   OR   \ кончилось количество шагов 
+work_Execute work-info -upravl_thead- @ <> OR
+UNTIL 
+ work-info STEP_TIME @ PAUSE-PROG
+
+\ частота
+ metod-info FREQ  F@   metod-info result @ FtoFile  
+"    "  metod-info result @  StoFile
+ \ измерение
+ metod-info izmeritel	@ ^ GetLevel  DUP 0 >   IF   0 DO  metod-info result @ FtoFile    LOOP ELSE DROP    THEN
+ "    "  metod-info result @  StoFile
+ \ уровень генераторе 
+ gen  F@   metod-info result @ FtoFile  
+"    "  metod-info result @  StoFile
+\  калибровочные данные
+ metod-info kalibr_izm	@ ^ GetLevel  DUP 0 >   IF   0 DO   metod-info result @ FtoFile  LOOP ELSE DROP    THEN
+ "    "  metod-info result @  StoFile
+ \ кол-во шагов
+ n_step @   metod-info result @ DtoFile  
+ metod-info result @  CRtoFile
+CR
+	; TO WORK:
+
+:NONAME   
+\ ." ifend "
+	metod-info  FREQ F@  metod-info  FREQ_END   F@ F>=   IF metod-info  FREQ_END   F@ metod-info  FREQ F! 0  ELSE 1 THEN
+	; TO IF_END:
+
+:NONAME   
+\ ." end"
+	" ];{CRLF}" metod-info result @ StoFile
+	" StartFreq=x(1,1); {CRLF}" metod-info result @ StoFile
+	" sss=size(x) {CRLF}" metod-info result @ StoFile
+	" StopFreq=x(sss(1),1); {CRLF}" metod-info result @ StoFile
+	\ " y=10^(x(:,2)./20)./1000000; {CRLF}" metod-info result @StoFile
+	" y=x(:,2){CRLF}"  metod-info result @ StoFile
+	" xset({''}thickness{''},2); {CRLF} " metod-info result @ StoFile
+
+	" plot2d({''}nn{''},x(:,1),y,1); {CRLF}" metod-info result @ StoFile
+	" set(gca(),{''}grid{''},[1, 1]); {CRLF}" metod-info result @ StoFile
+	" // " metod-info result @  StoFile TIME&DATE  DROP DROP DROP metod-info result @  DtoFile  metod-info result @  DtoFile  metod-info result @  DtoFile   metod-info result @ CRtoFile  
+	metod-info result @ outFileClose
+\ отключение оборудования
+	metod-info generator	@ ^ Off
+	metod-info generator	@ ^ Stop
+	metod-info izmeritel	@ ^ Stop
+	metod-info kalibr_izm	@ ^ Stop
+\ удаление оборудования 	
+	metod-info generator	@  FreeObj
+	metod-info izmeritel	@  FreeObj
+	metod-info kalibr_izm	@  FreeObj
+\ удаление таблиц	
+	metod-info kalibrovka  @   FreeObj
+	; TO END:

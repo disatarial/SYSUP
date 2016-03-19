@@ -1,0 +1,14 @@
+\ настройки измерителя
+
+REQUIRE  HYPE ~disa\~day\hype3\hype3.f
+
+ CLASS 2_Prib 
+
+: Start ."  not pribor " ;
+: Stop ;
+: SetFreq    FDROP ; 
+: SetLevel  FDROP  ; 
+: GetLevel  1.e 2.e 2 ; 
+: Off ;
+ 
+;CLASS 2_Prib

@@ -1,0 +1,15 @@
+COMMENT( простой проход по частоте с использованием  настроек по мощности)
+ " test.sce" work-info file_result_buf	LOAD_TO_BUFER 
+ 500  work-info STEP_TIME            ! 
+ 500  work-info STEP_PAUSE           ! 
+ 1.0000000e06  metod-info FREQ_BEGIN          F! 
+ 2.0000000e07  metod-info FREQ_END            F! 
+ 2.0000000e06  metod-info FREQ_STEP           F! 
+ 0  metod-info work_step           ! 
+ 1.0000000e-01   metod-info Tochnost           F! 
+ -1.0000000e01   metod-info GenMax             F! 
+ 6.0000000e00   metod-info GenMaxStep	        F! 
+ " prib/smy.prib" metod-info file_generator_buf	LOAD_TO_BUFER 
+ " prib/nrvd.prib" metod-info file_izmeritel_buf	LOAD_TO_BUFER 
+ " prib/FM7004_kanN1.prib" metod-info file_kalibr_izm_buf	LOAD_TO_BUFER 
+ " kal/test.kal" metod-info file_kalibrov_buf	LOAD_TO_BUFER 

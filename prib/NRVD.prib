@@ -1,0 +1,85 @@
+\ настройки измерителя
+
+REQUIRE  HYPE ~disa\~day\hype3\hype3.f
+REQUIRE socket_port ~disa/socket.F
+REQUIRE  test_port ~disa/test_prib.F
+
+
+
+\ gpib_port SUBCLASS 
+CLASS  NRVD
+
+CELL DEFS pribor
+
+: Start 
+|| D:  str_prib   D: etalon  D: flag  ||
+	" *NRVD*"  etalon !
+
+gpib_port NewObj pribor !
+ 4 0 pribor @ ^  open
+  " *IDN?"  S+CRLF  pribor @ ^  write  
+    pribor @ ^ read  str_prib !     
+    
+ \ CR     str_prib @  STR@ TYPE   CR
+ str_prib @ STR@ etalon @ STR@ WildCMP-U 
+ IF
+ 	 ."   ERROR: NRVD not found. FIND:  "  str_prib @  STR@ TYPE    -1 flag ! 
+ ELSE  
+	str_prib @ STR@ TYPE 0 flag ! 
+ THEN
+\ CR 
+ str_prib @ STRFREE 
+ etalon @ STRFREE 
+ flag @ \ DUP . CR
+ ;
+
+: Stop
+  pribor @ ^    close \ закрыли после использования
+ pribor @ FreeObj  
+;
+
+: SetFreq \  " {CRLF}"  >FNUM " FREQ " DUP >R  STR+ R@ S+ R> 4 0 izmeritel @ ^  write 
+FDROP
+;
+
+
+: GetLevel  
+|| D: s-adr ||
+1000 PAUSE
+  " *TRG"   pribor @ ^ write 100 PAUSE
+ pribor @ ^ read    STRFREE
+
+  BEGIN
+  " *TRG"   pribor @ ^ write 100 PAUSE
+ pribor @ ^ read    
+\   DUP STR@ TYPE ."  ="
+  3 N_S_PickUpWord 
+\  DUP STR@ TYPE ."  "
+  S>FLOAT \  FDUP F.  ."   | "
+ UNTIL
+1
+; 
+
+: DMB " POW:UNIT DB" pribor @ ^ write 300 PAUSE ;
+: ACanal " INP:SEL {''}A{''}" pribor @ ^ write 300 PAUSE ;
+: BCanal " INP:SEL {''}B{''}" pribor @ ^ write 300 PAUSE ;
+
+\ прочитать данные с приемника с текущими настройками
+\ : GetLevel  
+\ || D: s-adr ||
+\  BEGIN
+\  " *TRG"   izmeritel @ ^ write 100 PAUSE
+\ izmeritel @ ^ read  
+\  3 N_S_PickUpWord \ STYPE
+\  DUP STR@ TYPE SPACE
+\  \ s-adr !
+\ \ s-adr  @ \ STR@   EVALUATE \ . \ 0=
+\  S>FLOAT \ F. DROP
+\ \ 1e 1
+\ UNTIL
+\ s-adr  @ STRFREE 
+\ 1e3 F* FLOG 10e F* 
+\ ; 
+
+  
+;CLASS NRVD

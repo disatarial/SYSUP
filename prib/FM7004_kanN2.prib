@@ -1,0 +1,81 @@
+\ настройки измерителя
+
+REQUIRE  HYPE ~disa\~day\hype3\hype3.f
+REQUIRE socket_port ~disa/socket.F
+REQUIRE  test_port ~disa/test_prib.F
+REQUIRE gpib_port ~disa/gpib.f
+
+ CLASS FM7004 
+CELL DEFS pribor
+
+: Start 
+|| D:  str_prib   D: etalon  D: flag  ||
+	" *7004*"  etalon !
+	
+gpib_port NewObj pribor !
+12 0 pribor @ ^  open
+
+  " *IDN?"  S+CRLF  pribor @ ^  write  
+    pribor @ ^ read  str_prib !     
+    
+ \ CR     str_prib @  STR@ TYPE   CR
+ str_prib @ STR@ etalon @ STR@ WildCMP-U 
+ IF
+ 	 ."   ERROR: FM7004 not found. FIND:  "  str_prib @  STR@ TYPE    -1 flag ! 
+ ELSE  
+	str_prib @ STR@ TYPE 0 flag ! 
+ THEN
+\
+ ."   ... ok "
+\ CR 
+ str_prib @ STRFREE 
+ etalon @ STRFREE 
+ flag @ \ DUP . CR
+;
+
+
+: Stop
+ pribor @ ^    close \ закрыли после использования
+ pribor  @ FreeObj  
+;
+
+: SetFreq \  " {CRLF}"  >FNUM " FREQ " DUP >R  STR+ R@ S+ R> pribor @   ^ write 
+FDROP
+;
+
+\ прочитать данные  с текущими настройками
+( : GetLevel 
+ 1000 PAUSE
+" D,2?"    S+CRLF  pribor @ ^ write 200 PAUSE
+pribor @ ^ read
+\ DUP STR@ TYPE 
+ 			5  N_S_PickUpWord 
+\  ."  " DUP STR@ TYPE ."  " 
+
+ S>FLOAT DROP \ F.
+\ 1e6 F* FLOG 20e F* \ F.
+V->dBuV 
+\ FDUP F.
+\  DUP  >R STR@  DROP  17 + 5  
+\  "" DUP >R STR+  R> 
+ 1 ;
+ )
+ : GetLevel 
+1000 PAUSE
+BEGIN
+	" D,2?"    S+CRLF  pribor @ ^ write 200 PAUSE
+	pribor @ ^ read
+	5  N_S_PickUpWord 
+	 S>FLOAT \ F.
+UNTIL
+V->dBuV 
+1
+; 
+
+: GetData 200 PAUSE 
+" D,2?"    S+CRLF  pribor @ ^ write 100 PAUSE
+pribor @ ^ read \ STYPE
+; 
+
+  
+;CLASS  FM7004 

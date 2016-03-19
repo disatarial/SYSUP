@@ -1,0 +1,11 @@
+10 3   LoadDatas:
+ LoadData: 1.0000e0      0.1e -30.0E
+ LoadData: 200.0000e3  0.1e -33.7E
+ LoadData: 300.0000e3  0.1e -36.0E
+ LoadData: 500.0000e3  0.1e -37.3E
+ LoadData: 700.0000e3  0.1e -37.7E
+ LoadData: 1.000000e6  0.1e -38.0E
+ LoadData: 2.000000e6  0.1e -37.2E
+ LoadData: 4.000000e6  0.1e -37.1E
+ LoadData: 1.00000e10 0 .1e -30.0E
+

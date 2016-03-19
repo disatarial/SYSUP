@@ -1,0 +1,9 @@
+COMMENT( )
+ " test.txt" work-info file_result_buf	LOAD_TO_BUFER 
+ 0  work-info STEP_TIME            ! 
+ 0  work-info STEP_PAUSE           ! 
+ 1.0000000e06  metod-info FREQ_BEGIN          F! 
+ 1.0000000e08  metod-info FREQ_END            F! 
+ 1.0000000e-01  metod-info FREQ_STEP           F! 
+ -1  metod-info work_step           ! 
+ " D:\prog\SP-Forth\sysup1.0\metods\pereschet\kal\GOZNAK-MP.kal" metod-info file_kalibrov_buf	LOAD_TO_BUFER 

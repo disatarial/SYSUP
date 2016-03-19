@@ -1,0 +1,136 @@
+\ данный список зависит от рабочего метода  и определяется в нем (методе)
+COMMENT_METOD( интерполяционная настройка калибровочных таблиц)
+0
+\ изменяемые "вручную" значения
+  1 FLOATS  -- FREQ_BEGIN  \ начальная частота
+  1 FLOATS  -- FREQ_END   \ конечная частота
+  1 FLOATS  -- FREQ_STEP \ шаг
+  256	   -- file_kalibrov_buf	\ буфер имени файла калиброкеи
+\ внутренние переменные
+  1 FLOATS  -- FREQ       \ текущая частота
+ CELL -- kalibrovka		\  имя файла калиброкеи
+ CELL -- generator		\   объект генератора
+ CELL -- kalibr_izm		\  имя файла измерителя калибровки
+ CELL -- izmeritel		\  имя файла измерителя
+ CELL -- result			\  имя файла результата
+ CELL -- work_step    \ 1- процентный шаг,  0 линейшый шаг, -1  по таблице
+VALUE sysup-metod-info
+ HERE DUP >R sysup-metod-info DUP ALLOT ERASE TO  metod-info
+
+:NONAME  { n } ( n -- num/fnum  flag adr u    | flag )
+\ flag:   0 - нет описания 1 - целое 2-действительное 3- строка 4 -имя файла 
+\ ( если отричательные значения - нередактируемое поле)
+\ CASE
+ 0
+n 0 = IF DROP metod-info FREQ_BEGIN	2	S" Начальная частота "  THEN
+n 1 = IF DROP  metod-info FREQ_END	2	S" Конечная частота "  THEN
+n 2 = IF DROP   metod-info FREQ_STEP	2	S" Шаг по частоте "   THEN
+n 3 = IF DROP   metod-info file_kalibrov_buf 4	S" Калиброка"  THEN
+n 4 = IF DROP   metod-info work_step  1 S" ТИП РАБОТЫ  "  THEN
+\ 0
+\ ENDCASE
+ \ какой-то глюк кейса
+; TO SeeOne
+
+
+:NONAME
+S" ---------------------------------------------" TYPE CR
+."  COMMENT: "				work-info Coment_buffer work-info  Len_Coment_buffer  @ TYPE CR
+."  file_metod_buf: "			work-info  file_metod_buf	TYPE_BUFER CR  \ 1+ work-info  file_metod_buf  C@ TYPE CR 
+."  file_nastr_buf: "			work-info  file_nastr_buf	TYPE_BUFER  CR \ 1+ work-info  file_nastr_buf  C@ TYPE CR  
+ ." file_result_buf: "			work-info  file_result_buf	TYPE_BUFER CR
+."  STEP_TIME: "			work-info	STEP_TIME	@ .  CR
+."  STEP_PAUSE: "			work-info	STEP_PAUSE	@ . CR
+."  FREQ_BEGIN:"			metod-info	FREQ_BEGIN	F@ F. CR
+."  FREQ_END: "				metod-info	FREQ_END	F@ F. CR
+."  FREQ_STEP: "			metod-info	FREQ_STEP	F@ F. CR
+."  file_kalibrov_buf: "		metod-info file_kalibrov_buf	TYPE_BUFER CR
+."  work_step: "			metod-info  work_step		@ . CR
+S" ---------------------------------------------" TYPE CR
+CR
+; TO see 
+
+
+:NONAME  { save_file }
+\ задержки
+	work-info	STEP_TIME	@  save_file DtoFile  "  work-info STEP_TIME            ! "   save_file StoFile  save_file CRtoFile
+	work-info	STEP_PAUSE	@  save_file DtoFile  "  work-info STEP_PAUSE           ! "   save_file StoFile  save_file CRtoFile
+	metod-info	FREQ_BEGIN	F@ save_file FtoFile  "  metod-info FREQ_BEGIN          F! "  save_file StoFile  save_file CRtoFile	
+	metod-info	FREQ_END	F@ save_file FtoFile  "  metod-info FREQ_END            F! "  save_file StoFile  save_file CRtoFile
+	metod-info	FREQ_STEP	F@ save_file FtoFile  "  metod-info FREQ_STEP           F! "  save_file StoFile  save_file CRtoFile
+\  тип шага- линейный, процентный, ?добавить по формуле?????
+	metod-info	work_step	@ save_file DtoFile   "  metod-info work_step           ! "  save_file StoFile  save_file CRtoFile
+	\ диапазон в которое требуется попасть после калибровки
+
+\ имена файлов
+	"  {''} " save_file StoFile metod-info	file_kalibrov_buf   1 +	metod-info	file_kalibrov_buf	C@ STR>S save_file StoFile  " {''} metod-info file_kalibrov_buf	LOAD_TO_BUFER " save_file StoFile  save_file CRtoFile 
+\	"  {''} " save_file StoFile metod-info	file_metod		ASCIIZ> STR>S save_file StoFile  " {''} metod-info file_metod		LOAD_TO_BUFER " save_file StoFile  save_file CRtoFile
+; TO 	SAVE_NASTR_DATA 
+	
+	
+
+
+:NONAME  
+\ ."  begin " CR	  
+	see
+\ создали объект-основу калибровки
+	tabl_kalibr NewObj metod-info kalibrovka  !
+	metod-info kalibrovka  @ 	metod-info  file_kalibrov_buf  DUP  1+  SWAP C@   ERR-INCLUDE-PROBE 
+		IF "  error_in_file_kalibrovka "  DUP STR@ TYPE TO_ERROR_PROG_BUFER  error_out_file  work-info  ERROR_PROG !
+		ELSE ."  kalibrovka:  " metod-info kalibrovka  @ ^ SeeDatas  THEN CR
+	metod-info   FREQ_BEGIN F@ metod-info   FREQ  F!  
+\ результаты	подготовили файл
+	work-info  file_result_buf 1+ work-info  file_result_buf C@  STR>S  outFileCreate metod-info result !
+ \ коментари ф файл вывода
+
+	"  // " metod-info result @ StoFile
+	work-info Coment_buffer  work-info  Len_Coment_buffer @   STR>S metod-info result @ StoFile
+
+	metod-info result @	CRtoFile 
+	" clear; " metod-info result @ StoFile
+	metod-info result @	CRtoFile 
+
+	" x= [{CRLF}" metod-info result @ StoFile
+." begin-ok"
+; TO BEGIN:
+	
+	
+:NONAME   \ 
+ metod-info  work_step  @ 
+ CASE 
+ -1 OF  metod-info FREQ_STEP  F@ metod-info FREQ  F@ F*  metod-info FREQ  F@ F+   
+ ENDOF
+  1 OF  metod-info FREQ  F@  metod-info kalibrovka @ ^ NextFreq     ENDOF
+   metod-info FREQ_STEP  F@ metod-info FREQ  F@ F+  
+ ENDCASE
+	metod-info FREQ  F!  
+; TO NewStep
+
+
+:NONAME     
+	|| F: gen   ||
+ \ уcтанавливаем частоту
+ metod-info FREQ  F@ 2 metod-info kalibrovka @ ^ TakeData  gen F!  \ начальные данные генератора
+( \ частота
+ metod-info FREQ  F@   metod-info result @ FtoFile  
+"    "  metod-info result @  StoFile
+ 
+ 
+gen F@
+ metod-info result @ FtoFile    
+ "    "  metod-info result @  StoFile
+  metod-info result @  CRtoFile 
+)
+; TO WORK:
+ 
+
+:NONAME   
+	metod-info  FREQ F@  metod-info  FREQ_END   F@ F>=   IF metod-info  FREQ_END   F@ metod-info  FREQ F! 0  ELSE 1 THEN
+	; TO IF_END:
+
+:NONAME   
+\ ." end"
+
+\ удаление таблиц	
+	metod-info kalibrovka  @   FreeObj
+	; TO END:

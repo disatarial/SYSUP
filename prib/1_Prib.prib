@@ -1,0 +1,32 @@
+\ настройки измерителя
+
+REQUIRE  HYPE ~disa\~day\hype3\hype3.f
+
+ CLASS 1_Prib 
+1 FLOATS  DEFS data 
+: Start
+|| D:  str_prib   D: etalon  D: flag  ||
+" test pribor 1 data " str_prib !
+" *pribor*"  etalon !
+
+str_prib @ STR@ etalon @ STR@ WildCMP-U
+IF
+	 ."   ERROR pribor 1 not found  " CR -1 flag ! 
+ELSE  
+	str_prib @ STR@ TYPE CR 0 flag ! 
+	." pribor -ok "
+THEN
+ 
+etalon @  STRFREE  str_prib @ STRFREE 
+CR
+
+ flag @ DUP . CR
+;
+ 
+: Stop ;
+: SetFreq    F. ; 
+: SetLevel  FDUP F. data F!  ; 
+: GetLevel  data F@ FDUP F. 1 ; 
+: Off ;
+ 
+;CLASS 1_Prib
